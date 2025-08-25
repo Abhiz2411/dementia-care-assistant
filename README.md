@@ -1,3 +1,5 @@
+![System Architecture](architecture.png)
+
 # Dementia Care Assistant
 
 A **local-first voice-based cognitive assessment agent** designed for dementia care.  
