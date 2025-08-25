@@ -1,0 +1,123 @@
+[
+	{
+		"id": "orientation_day",
+		"domain": "orientation",
+		"prompt": "What day of the week is it today?",
+		"max_points": 1,
+		"keywords": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+	},
+	{
+		"id": "orientation_month",
+		"domain": "orientation",
+		"prompt": "What month is it?",
+		"max_points": 1,
+		"keywords": ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]
+	},
+	{
+		"id": "orientation_city",
+		"domain": "orientation",
+		"prompt": "What city are we in now?",
+		"max_points": 1,
+		"keywords": ["MUMBAI", "PUNE", "DELHI", "BENGALURU", "KOLKATA", "CHENNAI"]
+	},
+	{
+		"id": "orientation_season",
+		"domain": "orientation",
+		"prompt": "What season is it now?",
+		"max_points": 1,
+		"keywords": ["SUMMER", "MONSOON", "RAINY", "WINTER", "SPRING", "AUTUMN"]
+	},
+	{
+		"id": "attention_repeat_5digits",
+		"domain": "attention",
+		"prompt": "Please repeat these numbers back to me: 7, 2, 9, 4, 6.",
+		"max_points": 5,
+		"keywords": [],
+		"qtype": "repeat_digits",
+		"params": {"sequence": [7,2,9,4,6]}
+	},
+	{
+		"id": "attention_repeat_3digits",
+		"domain": "attention",
+		"prompt": "Please repeat these numbers back to me: 7, 2, 9.",
+		"max_points": 3,
+		"keywords": [],
+		"qtype": "repeat_digits",
+		"params": {"sequence": [7,2,9]}
+	},
+	{
+		"id": "attention_count_backward_hint",
+		"domain": "attention",
+		"prompt": "Count backward from 20.",
+		"max_points": 1,
+		"keywords": ["19", "EIGHTEEN", "18"]
+	},
+	{
+		"id": "memory_recent_event",
+		"domain": "memory",
+		"prompt": "Name any current event that happened recently.",
+		"max_points": 1,
+		"keywords": ["ELECTION", "SPORT", "MATCH", "NEWS", "WEATHER", "FESTIVAL", "STRIKE"]
+	},
+	{
+		"id": "language_animals_30s",
+		"domain": "language",
+		"prompt": "Name as many animals as you can in 30 seconds.",
+		"max_points": 3,
+		"keywords": [],
+		"qtype": "free_speech_min_words",
+		"params": {"min_words": 5}
+	},
+	{
+		"id": "language_sentence_completion",
+		"domain": "language",
+		"prompt": "Complete this: 'A dog barks, a cat ____.'",
+		"max_points": 1,
+		"keywords": ["MEOWS"]
+	},
+	{
+		"id": "calc_add_15_9",
+		"domain": "calculation",
+		"prompt": "What is 15 plus 9?",
+		"max_points": 1,
+		"keywords": [],
+		"qtype": "math_add",
+		"params": {"a": 15, "b": 9}
+	},
+	{
+		"id": "calc_subtract_dynamic",
+		"domain": "calculation",
+		"prompt": "Please subtract 7 from 100 and tell me the result.",
+		"max_points": 1,
+		"keywords": ["93"],
+		"qtype": "math_subtract",
+		"params": {"start_min": 90, "start_max": 120, "decrement": 7}
+	},
+	{
+		"id": "free_morning_routine",
+		"domain": "free_speech",
+		"prompt": "Tell me about your morning routine.",
+		"max_points": 2,
+		"keywords": [],
+		"qtype": "free_speech_min_words",
+		"params": {"min_words": 10}
+	},
+	{
+		"id": "free_place_you_enjoy",
+		"domain": "free_speech",
+		"prompt": "Describe a place you enjoy visiting and why.",
+		"max_points": 2,
+		"keywords": [],
+		"qtype": "free_speech_min_words",
+		"params": {"min_words": 10}
+	},
+	{
+		"id": "planning_cook_dinner",
+		"domain": "planning",
+		"prompt": "Tell me the steps to cook dinner from getting ingredients to serving.",
+		"max_points": 3,
+		"keywords": [],
+		"qtype": "planning_keywords",
+		"params": {"keywords": ["STORE", "BUY", "PREP", "CUT", "BOIL", "ADD", "COOK", "DRAIN", "SERVE"]}
+	}
+]

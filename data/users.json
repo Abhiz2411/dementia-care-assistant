@@ -1,0 +1,60 @@
+{
+  "users": {
+    "b82dc16a-f33b-4c74-9442-2d16e39288e8": {
+      "id": "b82dc16a-f33b-4c74-9442-2d16e39288e8",
+      "username": "ishan123",
+      "password_hash": "scrypt:32768:8:1$N4G2p24FO4iUVBWR$04de081d1d8053924d8d1b95995fc0a34d653d6a283055a273a6e0c02f6c79ff49572f260234794c74f247187143e944705da44a381ed5e495e48e2efd170c09",
+      "voices": [
+        {
+          "voice_id": "75757858-b608-49a9-a3cb-605fdd960567",
+          "name": "first"
+        }
+      ],
+      "default_voice_id": "75757858-b608-49a9-a3cb-605fdd960567"
+    },
+    "7dfadd31-838d-4336-9331-4ed604dcf541": {
+      "id": "7dfadd31-838d-4336-9331-4ed604dcf541",
+      "username": "admin",
+      "password_hash": "scrypt:32768:8:1$PvKOFvc3vF2qEaTF$4af25a5d43e5707c7ff43f5e378c37eb08b25f1f2cecbdce13a9ef3f5ad3c1505b2d11b53499f461ae8799333d7018846363181ea755b59d063af2d8255a9e29",
+      "voices": [
+        {
+          "voice_id": "f5b5424e-f868-421a-b93e-49482de4255e",
+          "name": "sample"
+        },
+        {
+          "voice_id": "2ee0f9a7-e2a6-4ca6-b378-a8db5f4673d3",
+          "name": "male"
+        }
+      ],
+      "default_voice_id": "2ee0f9a7-e2a6-4ca6-b378-a8db5f4673d3"
+    },
+    "e5b93d48-9d2f-4b75-8403-fc6ac38c145b": {
+      "id": "e5b93d48-9d2f-4b75-8403-fc6ac38c145b",
+      "username": "ishan",
+      "password_hash": "scrypt:32768:8:1$8TGRIZf4zVbUIxzX$b78327a5360c315a5f1f50673364180658488365b15c9d81f4f3a72df8b99c5f0d9ffcedd1de3cf8fc09784e98446295c913f7e15e94b6fd23faa28726144ef8",
+      "voices": [
+        {
+          "voice_id": "503cf5f1-0058-4ecc-ac2d-4c4104177214",
+          "name": "My Voice"
+        }
+      ],
+      "default_voice_id": "503cf5f1-0058-4ecc-ac2d-4c4104177214"
+    },
+    "c9e4cfc6-a0ce-46c4-af4b-4ea1e945fded": {
+      "id": "c9e4cfc6-a0ce-46c4-af4b-4ea1e945fded",
+      "username": "abhijit",
+      "password_hash": "scrypt:32768:8:1$IxV1NwvUSwAG6ANa$c5bd18c740852f03a5620d95f6edc2b6d531c0605781c878ce4d3d1411c847e829ff771b6d635a61c314c99a6ae22c811edf32e181aac837613fb2aac60b11c4",
+      "voices": [
+        {
+          "voice_id": "ecf97d66-125c-466f-83a7-84542fbdfc45",
+          "name": "Abhijit"
+        },
+        {
+          "voice_id": "b824387c-337a-4919-b983-1dea7ae14725",
+          "name": "Jaival"
+        }
+      ],
+      "default_voice_id": "b824387c-337a-4919-b983-1dea7ae14725"
+    }
+  }
+}

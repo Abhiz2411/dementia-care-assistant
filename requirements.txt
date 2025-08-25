@@ -1,0 +1,26 @@
+flask==3.0.3
+flask-cors==4.0.0
+requests==2.32.3
+google-generativeai==0.7.2
+python-dotenv==1.0.1
+
+# XTTS self-hosted server
+fastapi==0.112.0
+uvicorn==0.30.6
+TTS==0.22.0
+soundfile==0.12.1
+# Pinned to satisfy TTS 0.22.0 on Python 3.10
+numpy==1.22.0
+scipy==1.11.4
+
+# Transformers stack for XTTS GPT generate
+transformers==4.40.2
+accelerate==0.33.0
+huggingface-hub==0.24.6
+tokenizers==0.19
+sentencepiece==0.1.99
+
+# Optional: PDF parsing helper
+pdfplumber==0.11.4 
+
+python-multipart==0.0.20

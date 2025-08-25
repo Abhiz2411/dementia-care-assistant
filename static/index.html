@@ -1,0 +1,329 @@
+<!doctype html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<title>Dementia Voice Assistant</title>
+	<style>
+		:root { --bg:#0f172a; --card:#111827; --muted:#9ca3af; --accent:#22c55e; --btn:#2563eb; --warn:#f59e0b; }
+		* { box-sizing: border-box; }
+		body { margin:0; background: linear-gradient(180deg, #0b1220, #0e1526); color:#e5e7eb; font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+		.header { padding:16px 24px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #1f2937; background:#0b1220aa; position:sticky; top:0; backdrop-filter: blur(8px); }
+		.title { font-weight:700; letter-spacing:.3px; }
+		.container { max-width:1100px; margin:24px auto; padding:0 16px; display:grid; grid-template-columns: 320px 1fr; gap:16px; }
+		.card { background: #0f172a; border:1px solid #1f2937; border-radius:12px; padding:16px; }
+		.card h3 { margin:0 0 8px 0; font-size:14px; color:#93c5fd; text-transform:uppercase; letter-spacing:.6px; }
+		.input, select { width:100%; background:#0b1220; color:#e5e7eb; border:1px solid #374151; border-radius:10px; padding:10px 12px; outline:none; }
+		.input:focus, select:focus { border-color:#2563eb; box-shadow:0 0 0 3px #1d4ed81a; }
+		.btn { background: var(--btn); color:white; border:none; border-radius:10px; padding:10px 14px; cursor:pointer; font-weight:600; }
+		.btn.secondary { background:#374151; }
+		.btn.warn { background:var(--warn); color:#111827; }
+		.row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+		.badge { background:#1f2937; color:#93c5fd; border:1px solid #374151; padding:4px 8px; border-radius:999px; font-size:12px; }
+		.list { display:flex; flex-direction:column; gap:8px; max-height:220px; overflow:auto; }
+		.voice-item { display:flex; align-items:center; justify-content:space-between; padding:8px; background:#0b1220; border:1px solid #1f2937; border-radius:8px; }
+		.footer { text-align:center; color:#94a3b8; padding:16px; }
+		.log { white-space: pre-wrap; background:#0b1220; border:1px solid #1f2937; padding:12px; border-radius:8px; min-height:120px; }
+		.audio { width:100%; margin-top:8px; }
+	</style>
+</head>
+<body>
+	<div class="header">
+		<div class="title">Dementia Voice Assistant</div>
+		<div class="row">
+			<span id="userLabel" class="badge">Guest</span>
+		</div>
+	</div>
+	<div class="container">
+		<div class="card">
+			<h3>Account</h3>
+			<div class="row">
+				<input id="username" class="input" placeholder="Username" />
+				<input id="password" class="input" placeholder="Password" type="password" />
+			</div>
+			<div class="row" style="margin-top:8px;">
+				<button id="register" class="btn secondary">Register</button>
+				<button id="login" class="btn">Login</button>
+			</div>
+			<div style="height:8px"></div>
+			<h3>My Voices</h3>
+			<div class="list" id="voiceList"></div>
+			<div class="row" style="margin-top:8px;">
+				<select id="voiceSelect"></select>
+				<button id="useVoice" class="btn">Use Voice</button>
+			</div>
+			<div style="height:8px"></div>
+			<h3>Clone New Voice</h3>
+			<div class="row">
+				<input type="file" id="voiceSample" accept="audio/*" class="input" />
+				<input id="voiceName" class="input" placeholder="Voice name (optional)" />
+			</div>
+			<div class="row" style="margin-top:8px;">
+				<button id="clone" class="btn">Clone & Save</button>
+			</div>
+			<div style="height:8px"></div>
+			<h3>Test Controls</h3>
+			<div class="row">
+				<button id="startSession" class="btn">Start Session</button>
+				<button id="beginTest" class="btn warn">Begin Test</button>
+				<label class="row"><input type="checkbox" id="autoMode" checked /> Auto Mode</label>
+			</div>
+		</div>
+		<div class="card" style="grid-column: span 1 / span 1;">
+			<h3>Conversation</h3>
+			<div class="row">
+				<button id="listen" class="btn secondary">Start Recording</button>
+				<button id="stop" class="btn secondary">Stop Recording</button>
+				<button id="next" class="btn">Send Last Transcript</button>
+			</div>
+			<div id="spinner" style="display:none;color:#93c5fd;">Processing voice...</div>
+			<audio id="audio" class="audio" controls></audio>
+			<div style="height:8px"></div>
+			<h3>Log</h3>
+			<div id="log" class="log"></div>
+			<div style="height:8px"></div>
+			<h3>Scores</h3>
+			<div id="scores" class="log"></div>
+		</div>
+	</div>
+	<div class="footer">All agent speech uses your cloned voice. TTS is self-hosted (XTTS v2).</div>
+
+	<script>
+	let mediaRecorder, audioChunks = [];
+	let sessionId = null;
+	let lastTranscript = '';
+	let currentUser = null;
+	let voiceCloned = false;
+	let autoRunning = false;
+
+	function log(txt) { document.getElementById('log').textContent += `\n${txt}`; }
+	function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+	function getGetUserMedia(){
+		const nav = navigator || {};
+		if (nav.mediaDevices && typeof nav.mediaDevices.getUserMedia === 'function') {
+			return nav.mediaDevices.getUserMedia.bind(nav.mediaDevices);
+		}
+		const legacy = nav.getUserMedia || nav.webkitGetUserMedia || nav.mozGetUserMedia || nav.msGetUserMedia;
+		if (legacy) {
+			return (constraints)=> new Promise((resolve, reject)=> legacy.call(nav, constraints, resolve, reject));
+		}
+		return null;
+	}
+
+	async function api(method, url, body, isForm=false){
+		const opts = { method, headers: isForm?{}:{'Content-Type':'application/json'} };
+		if (body) opts.body = isForm? body : JSON.stringify(body);
+		const res = await fetch(url, opts);
+		if (!res.ok) throw new Error(`${method} ${url} failed`);
+		const ct = res.headers.get('content-type')||'';
+		return ct.includes('application/json')? res.json() : res.text();
+	}
+
+	function setUser(u){ currentUser = u; document.getElementById('userLabel').textContent = u? u.username : 'Guest'; }
+
+	async function refreshVoices(){
+		if (!currentUser) return;
+		const data = await api('GET', `/voices?user_id=${encodeURIComponent(currentUser.id)}`);
+		const list = document.getElementById('voiceList');
+		list.innerHTML = '';
+		const sel = document.getElementById('voiceSelect');
+		sel.innerHTML = '';
+		(data.voices||[]).forEach(v => {
+			const div = document.createElement('div');
+			div.className = 'voice-item';
+			div.innerHTML = `<span>${v.name} <span class="badge">${v.voice_id===data.default_voice_id?'Default':''}</span></span>`;
+			list.appendChild(div);
+			const opt = document.createElement('option');
+			opt.value = v.voice_id; opt.textContent = v.name;
+			sel.appendChild(opt);
+		});
+	}
+
+	async function speak(text) {
+		const fd = new FormData();
+		fd.append('session_id', sessionId);
+		fd.append('text', text);
+		document.getElementById('spinner').style.display = 'block';
+		const res = await fetch('/speak', { method: 'POST', body: fd });
+		if (!res.ok) { let err={}; try{err=await res.json();}catch(e){}; throw new Error('Speak error: '+JSON.stringify(err)); }
+		const blob = await res.blob();
+		const audioEl = document.getElementById('audio');
+		audioEl.src = URL.createObjectURL(blob);
+		await audioEl.play().catch(()=>{});
+		await new Promise(resolve => { audioEl.onended = resolve; });
+		document.getElementById('spinner').style.display = 'none';
+	}
+
+	function playBeep(durationMs=400, freq=880){
+		try{
+			const ctx = new (window.AudioContext||window.webkitAudioContext)();
+			const osc = ctx.createOscillator();
+			const gain = ctx.createGain();
+			osc.frequency.value = freq; osc.type='sine';
+			osc.connect(gain); gain.connect(ctx.destination);
+			gain.gain.setValueAtTime(0.2, ctx.currentTime);
+			osc.start();
+			setTimeout(()=>{ osc.stop(); ctx.close(); }, durationMs);
+		}catch(e){}
+	}
+
+	async function startRecording() {
+		const gUM = getGetUserMedia();
+		if (!gUM) {
+			log('Microphone not available. Use a modern browser (Chrome/Edge) and open via http://localhost or HTTPS.');
+			throw new Error('getUserMedia unsupported');
+		}
+		const stream = await gUM({ audio: true });
+		mediaRecorder = new MediaRecorder(stream);
+		audioChunks = [];
+		mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+		mediaRecorder.start();
+		log('Recording...');
+	}
+
+	async function stopRecordingAndTranscribe() {
+		if (!mediaRecorder) return '';
+		await new Promise(r => { mediaRecorder.onstop = r; mediaRecorder.stop(); });
+		const blob = new Blob(audioChunks, { type: 'audio/webm' });
+		const fd = new FormData();
+		fd.append('audio', blob, 'input.webm');
+		const data = await api('POST', '/asr', fd, true);
+		lastTranscript = data.text || '';
+		log('You: ' + lastTranscript);
+		return lastTranscript;
+	}
+
+	async function advance(userText) {
+		const data = await api('POST', '/conversation/next', { session_id: sessionId, user_text: userText || '' });
+		// speak first, then show text
+		try { await speak(data.agent_text); } catch(e) { log(String(e)); }
+		log('Agent: ' + data.agent_text);
+		return data;
+	}
+
+	async function autoLoop(initialAgentText) {
+		autoRunning = true;
+		try { await speak(initialAgentText); } catch(e) { log(String(e)); autoRunning = false; return; }
+		let step = await advance('');
+		while (autoRunning && !step.done) {
+			try {
+				playBeep();
+				await startRecording();
+				await sleep(6000);
+				const transcript = await stopRecordingAndTranscribe();
+				step = await advance(transcript);
+			} catch (e) { log('Auto loop error: ' + String(e)); autoRunning = false; break; }
+		}
+		if (step && step.done) {
+			renderScores(step.scores);
+		}
+		autoRunning = false;
+	}
+
+	document.getElementById('register').onclick = async () => {
+		const username = document.getElementById('username').value.trim();
+		const password = document.getElementById('password').value;
+		const data = await api('POST', '/auth/register', { username, password });
+		setUser({ id: data.user_id, username });
+		await refreshVoices();
+		log('Registered and logged in.');
+	};
+
+	document.getElementById('login').onclick = async () => {
+		const username = document.getElementById('username').value.trim();
+		const password = document.getElementById('password').value;
+		const data = await api('POST', '/auth/login', { username, password });
+		setUser({ id: data.user_id, username });
+		await refreshVoices();
+		log('Logged in.');
+	};
+
+	document.getElementById('clone').onclick = async () => {
+		if (!currentUser) { log('Login first'); return; }
+		const file = document.getElementById('voiceSample').files[0];
+		if (!file) { log('Select a 1–3 min audio sample'); return; }
+		const name = document.getElementById('voiceName').value.trim();
+		const fd = new FormData();
+		// allow cloning without session
+		if (sessionId) fd.append('session_id', sessionId);
+		fd.append('user_id', currentUser.id);
+		fd.append('voice_name', name);
+		fd.append('audio', file);
+		const res = await fetch('/voice/clone', { method: 'POST', body: fd });
+		const data = await res.json();
+		if (data.voice_id) {
+			voiceCloned = true;
+			await api('POST', '/voices/name', { user_id: currentUser.id, voice_id: data.voice_id, name, set_default: true });
+			await refreshVoices();
+			log('Voice cloned and saved.');
+		} else {
+			log('Voice clone error: ' + JSON.stringify(data));
+		}
+	};
+
+	document.getElementById('useVoice').onclick = async () => {
+		if (!currentUser || !sessionId) { log('Login and Start Session first'); return; }
+		const voiceId = document.getElementById('voiceSelect').value;
+		await api('POST', '/voices/select', { session_id: sessionId, user_id: currentUser.id, voice_id: voiceId });
+		log('Voice selected for session.');
+	};
+
+	document.getElementById('startSession').onclick = async () => {
+		const payload = currentUser? { user_id: currentUser.id } : {};
+		const data = await api('POST', '/session', payload);
+		sessionId = data.session_id;
+		log('Session: ' + sessionId);
+		log('Agent: ' + data.agent_text);
+		window.__openingPrompt = data.agent_text;
+		// auto use default voice if provided
+		if (currentUser && data.voice_id){
+			try { await api('POST', '/voices/select', { session_id: sessionId, user_id: currentUser.id, voice_id: data.voice_id }); log('Default voice attached to session.'); } catch(e) {}
+		}
+	};
+
+	document.getElementById('beginTest').onclick = async () => {
+		if (!sessionId) { log('Start session first'); return; }
+		const opening = window.__openingPrompt || 'Hello, we will begin.';
+		if (document.getElementById('autoMode').checked) {
+			autoLoop(opening);
+		} else {
+			try { await speak(opening); } catch(e) {}
+			const first = await advance('');
+			// auto-start recording after agent prompt even in manual mode
+			playBeep();
+			await startRecording();
+		}
+	};
+
+	document.getElementById('listen').onclick = async () => { playBeep(); await startRecording(); };
+	document.getElementById('stop').onclick = async () => { await stopRecordingAndTranscribe(); };
+	document.getElementById('next').onclick = async () => {
+		if (!sessionId) { log('Start session first'); return; }
+		const data = await advance(lastTranscript);
+	};
+
+	function renderScores(scores){
+		const el = document.getElementById('scores');
+		const order = Object.keys(scores).filter(k=>k!=='overall').concat(['overall']);
+		const pill = (cat)=>({
+			'Excellent':'#22c55e', 'Good':'#84cc16', 'Fair':'#f59e0b', 'Needs Attention':'#ef4444'
+		})[cat]||'#6b7280';
+		let html = '';
+		order.forEach(key=>{
+			const s = scores[key];
+			if (!s || typeof s !== 'object') return;
+			html += `<div style="display:flex;align-items:center;justify-content:space-between;padding:6px;border-bottom:1px solid #1f2937;">
+				<div style="text-transform:capitalize;">${key.replaceAll('_',' ')}</div>
+				<div style="display:flex;align-items:center;gap:8px;">
+					<div style="width:160px;height:8px;background:#111827;border-radius:999px;overflow:hidden;"><div style="width:${s.percent||0}%;height:100%;background:${pill(s.category)};"></div></div>
+					<div style="font-size:12px;color:#93c5fd;">${s.points||0}/${s.max_points||0} (${s.percent||0}%)</div>
+					<span class="badge" style="background:${pill(s.category)};color:#0b1220;">${s.category}</span>
+				</div>
+			</div>`;
+		});
+		el.innerHTML = html;
+	}
+	</script>
+</body>
+</html> 

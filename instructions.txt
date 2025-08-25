@@ -1,0 +1,65 @@
+Dementia Voice Assistant
+
+This is a voice-based assistant that helps assess cognitive function. It uses locally-hosted text-to-speech (XTTS v2) to guide users through several phases: a greeting, three-word memory test, some intervening questions, delayed recall, and finally provides a summary with scores. The system runs in Auto Mode by default for a smoother experience.
+
+What You'll Need:
+- A computer running Windows, Mac, or Linux with Python 3.10 installed
+- The XTTS v2 system running on your machine (we provide a FastAPI server)
+- Optional: If you want speech recognition, you'll need a Google Gemini API key
+
+Getting Started:
+1. Set up your Python environment:
+   ```powershell
+   python -m venv .venv
+   . .venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+
+2. Create a .env file (or just copy .env.example) with these settings:
+   ```
+   GOOGLE_API_KEY=
+   XTTS_BASE_URL=http://localhost:8020
+   GEMINI_ASR_MODEL=gemini-1.5-flash
+   PORT=5000
+   ```
+
+Running the System:
+1. First, start the XTTS server (it'll download the model the first time):
+   ```powershell
+   python -m uvicorn xtts_server:app --host 0.0.0.0 --port 8020
+   ```
+
+2. Then, in a new terminal window, start the main app:
+   ```powershell
+   . .venv\Scripts\Activate.ps1
+   python app.py
+   ```
+
+3. Visit http://localhost:5000 in your browser
+
+How to Use:
+1. Create an account or log in
+2. Record a voice sample (1-3 minutes) to clone your voice
+3. Start a new session and begin the test
+4. Auto Mode (on by default) will:
+   - Speak instructions using your cloned voice
+   - Play a beep when it's your turn
+   - Record your response
+   - Convert your speech to text (if Gemini is set up)
+   - Move to the next step
+   - Show a nicely formatted summary at the end
+
+Technical Details:
+- The API has endpoints for session management, voice cloning, text-to-speech, speech recognition, and conversation flow
+- Questions are stored in data/questions.json and support various types:
+  * Math (addition and subtraction)
+  * Digit repetition
+  * Yes/no questions
+  * Free speech with minimum word requirements
+  * Planning tasks with keyword detection
+- Scoring happens in services/scoring.py and results are shown in the interface
+
+Good to Know:
+- All text-to-speech happens locally - no cloud services needed
+- You can adjust the Auto Mode listening time by changing the 6000ms setting in static/index.html
+- For microphone access, use Chrome/Edge and make sure you're on localhost or HTTPS
